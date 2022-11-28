@@ -1,5 +1,6 @@
 datasets/*
 results/*
+results_tmp/*
 results-comind/*
 .ipynb_checkpoints
 __pycache__/
