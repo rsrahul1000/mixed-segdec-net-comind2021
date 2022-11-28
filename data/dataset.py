@@ -42,7 +42,6 @@ class Dataset(torch.utils.data.Dataset):
             else:
                 self.neg_imgs_permutation = np.random.permutation(self.num_neg)
 
-
         if self.kind == 'TRAIN':
             if index >= self.num_pos:
                 ix = index % self.num_pos
@@ -122,10 +121,10 @@ class Dataset(torch.utils.data.Dataset):
     def distance_transform(self, mask: np.ndarray, max_val: float, p: float) -> np.ndarray:
         h, w = mask.shape[:2]
         dst_trf = np.zeros((h, w))
-        
+
         num_labels, labels = cv2.connectedComponents((mask * 255.0).astype(np.uint8), connectivity=8)
         for idx in range(1, num_labels):
-            mask_roi= np.zeros((h, w))
+            mask_roi = np.zeros((h, w))
             k = labels == idx
             mask_roi[k] = 255
             dst_trf_roi = distance_transform_edt(mask_roi)

@@ -12,6 +12,7 @@ import numpy as np
 from models import SegDecNet
 import matplotlib.pyplot as plt
 import matplotlib
+import time
 
 matplotlib.use("Agg")
 
@@ -54,6 +55,9 @@ class End2End:
         loss_seg, loss_dec = self._get_loss(True), self._get_loss(False)
 
         train_loader = get_dataset("TRAIN", self.cfg)
+        # print(train_loader)
+        # pass
+
         validation_loader = get_dataset("VAL", self.cfg)
 
         tensorboard_writer = SummaryWriter(
@@ -74,8 +78,9 @@ class End2End:
         self.eval_model(device, model, test_loader, save_folder=self.outputs_path,
                         save_images=save_images, is_validation=False, plot_seg=plot_seg)
 
-    def training_iteration(self, data, device, model, criterion_seg, criterion_dec, optimizer, weight_loss_seg, weight_loss_dec,
-                           tensorboard_writer, iter_index):
+    def training_iteration(
+            self, data, device, model, criterion_seg, criterion_dec, optimizer, weight_loss_seg, weight_loss_dec,
+            tensorboard_writer, iter_index):
         images, seg_masks, seg_loss_masks, is_segmented, _ = data
 
         batch_size = self.cfg.BATCH_SIZE
@@ -92,10 +97,8 @@ class End2End:
         total_loss_dec = 0
 
         for sub_iter in range(num_subiters):
-            images_ = images[sub_iter *
-                             memory_fit:(sub_iter + 1) * memory_fit, :, :, :].to(device)
-            seg_masks_ = seg_masks[sub_iter *
-                                   memory_fit:(sub_iter + 1) * memory_fit, :, :, :].to(device)
+            images_ = images[sub_iter * memory_fit:(sub_iter + 1) * memory_fit, :, :, :].to(device)
+            seg_masks_ = seg_masks[sub_iter * memory_fit:(sub_iter + 1) * memory_fit, :, :, :].to(device)
             seg_loss_masks_ = seg_loss_masks[sub_iter * memory_fit:(
                 sub_iter + 1) * memory_fit, :, :, :].to(device)
             is_pos_ = seg_masks_.max().reshape((memory_fit, 1)).to(device)
@@ -139,7 +142,9 @@ class End2End:
 
         return total_loss_seg, total_loss_dec, total_loss, total_correct
 
-    def _train_model(self, device, model, train_loader, criterion_seg, criterion_dec, optimizer, validation_set, tensorboard_writer):
+    def _train_model(
+            self, device, model, train_loader, criterion_seg, criterion_dec, optimizer, validation_set,
+            tensorboard_writer):
         torch.backends.cudnn.enabled = False
         losses = []
         validation_data = []
@@ -169,12 +174,9 @@ class End2End:
             start = timer()
             for iter_index, (data) in enumerate(train_loader):
                 start_1 = timer()
-                curr_loss_seg, curr_loss_dec, curr_loss, correct = self.training_iteration(data, device, model,
-                                                                                           criterion_seg,
-                                                                                           criterion_dec,
-                                                                                           optimizer, weight_loss_seg,
-                                                                                           weight_loss_dec,
-                                                                                           tensorboard_writer, (epoch * samples_per_epoch + iter_index))
+                curr_loss_seg, curr_loss_dec, curr_loss, correct = self.training_iteration(
+                    data, device, model, criterion_seg, criterion_dec, optimizer, weight_loss_seg, weight_loss_dec,
+                    tensorboard_writer, (epoch * samples_per_epoch + iter_index))
 
                 end_1 = timer()
                 time_acc = time_acc + (end_1 - start_1)
@@ -256,19 +258,20 @@ class End2End:
                     if self.cfg.WEIGHTED_SEG_LOSS:
                         seg_loss_mask = cv2.resize(
                             seg_loss_mask.numpy()[0, 0, :, :], dsize)
-                        utils.plot_sample(
-                            sample_name[0], image, pred_seg, seg_loss_mask, save_folder, decision=prediction, plot_seg=plot_seg)
+                        utils.plot_sample(sample_name[0], image, pred_seg, seg_loss_mask,
+                                          save_folder, decision=prediction, plot_seg=plot_seg)
                     else:
-                        utils.plot_sample(
-                            sample_name[0], image, pred_seg, seg_mask, save_folder, decision=prediction, plot_seg=plot_seg)
+                        utils.plot_sample(sample_name[0], image, pred_seg, seg_mask,
+                                          save_folder, decision=prediction, plot_seg=plot_seg)
 
         if is_validation:
             metrics = utils.get_metrics(
                 np.array(ground_truths), np.array(predictions))
             FP, FN, TP, TN = list(
                 map(sum, [metrics["FP"], metrics["FN"], metrics["TP"], metrics["TN"]]))
-            self._log(f"VALIDATION || AUC={metrics['AUC']:f}, and AP={metrics['AP']:f}, with best thr={metrics['best_thr']:f} "
-                      f"at f-measure={metrics['best_f_measure']:.3f} and FP={FP:d}, FN={FN:d}, TOTAL SAMPLES={FP + FN + TP + TN:d}")
+            self._log(
+                f"VALIDATION || AUC={metrics['AUC']:f}, and AP={metrics['AP']:f}, with best thr={metrics['best_thr']:f} "
+                f"at f-measure={metrics['best_f_measure']:.3f} and FP={FP:d}, FN={FN:d}, TOTAL SAMPLES={FP + FN + TP + TN:d}")
 
             return metrics["AP"], metrics["accuracy"]
         else:
@@ -374,7 +377,7 @@ class End2End:
             results_path, "tensorboard", self.run_name)
 
         run_path = os.path.join(results_path, self.cfg.RUN_NAME)
-        if self.cfg.DATASET in ["KSDD", "DAGM"]:
+        if self.cfg.DATASET in ["KSDD", "DAGM", "MVTEC"]:
             run_path = os.path.join(run_path, f"FOLD_{self.cfg.FOLD}")
 
         self._log(f"Executing run with path {run_path}")

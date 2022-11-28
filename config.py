@@ -3,7 +3,7 @@ class Config:
 
     RUN_NAME = None
 
-    DATASET = None  # KSDD, DAGM, STEEL, KSDD2
+    DATASET = None  # KSDD, DAGM, STEEL, KSDD2, MVTEC
     DATASET_PATH = None
 
     EPOCHS = None
@@ -93,6 +93,16 @@ class Config:
             self.INPUT_CHANNELS = 3
             if self.NUM_SEGMENTED is None:
                 raise Exception("Missing NUM_SEGMENTED for KSDD2 dataset!")
+        elif self.DATASET == 'MVTEC':
+            self.INPUT_WIDTH = 224
+            self.INPUT_HEIGHT = 224
+            self.INPUT_CHANNELS = 3
+            self.VALIDATE_ON_TEST = False
+            # self.VALIDATE = False
+            self.USE_BEST_MODEL = True
+
+            if self.NUM_SEGMENTED is None:
+                raise Exception("Missing NUM_SEGMENTED for MVTEC dataset!")
         else:
             raise Exception('Unknown dataset {}'.format(self.DATASET))
 

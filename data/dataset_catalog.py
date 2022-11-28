@@ -1,3 +1,4 @@
+from .input_mvtec import MVTecDataset
 from .input_ksdd import KSDDDataset
 from .input_dagm import DagmDataset
 from .input_steel import SteelDataset
@@ -20,6 +21,8 @@ def get_dataset(kind: str, cfg: Config) -> Optional[DataLoader]:
         ds = SteelDataset(kind, cfg)
     elif cfg.DATASET == "KSDD2":
         ds = KSDD2Dataset(kind, cfg)
+    elif cfg.DATASET == "MVTEC":
+        ds = MVTecDataset(kind, cfg)
     else:
         raise Exception(f"Unknown dataset {cfg.DATASET}")
 
@@ -29,4 +32,7 @@ def get_dataset(kind: str, cfg: Config) -> Optional[DataLoader]:
     drop_last = kind == "TRAIN"
     pin_memory = False
 
-    return DataLoader(dataset=ds, batch_size=batch_size, shuffle=shuffle, num_workers=num_workers, drop_last=drop_last, pin_memory=pin_memory)
+    print("Kind: ", kind)
+
+    return DataLoader(
+        dataset=ds, batch_size=batch_size, shuffle=shuffle, num_workers=num_workers, drop_last=drop_last, pin_memory=pin_memory)

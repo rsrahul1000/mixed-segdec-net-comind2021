@@ -4,6 +4,7 @@ KSDD_PATH="./datasets/KSDD/"
 DAGM_PATH="./datasets/DAGM/"
 STEEL_PATH="./datasets/STEEL/"
 KSDD2_PATH="./datasets/KSDD2/"
+MVTEC_PATH="./datasets/MVTEC/"
 
 
 train_KSDD()
@@ -112,8 +113,95 @@ train_DAGM()
       wait
       [[ $class -eq 11 ]] && break
     done
-    wait
+    sleep 1
 
+}
+
+train_MVTEC() {
+    SAVE_IMAGES=$1;shift
+    RUN_NAME=$1; shift
+    RESULTS_PATH=$1; shift
+
+    DILATE=$1; shift
+    NUM_SEGMENTED=$1; shift
+
+    EPOCHS=$1; shift
+    LEARNING_RATE=$1; shift
+    DELTA_CLS_LOSS=$1; shift
+    BATCH_SIZE=$1; shift
+    WEIGHTED_SEG_LOSS=$1; shift
+    WEIGHTED_SEG_LOSS_P=$1; shift
+    WEIGHTED_SEG_LOSS_MAX=$1; shift
+    DYN_BALANCED_LOSS=$1; shift
+    GRADIENT_ADJUSTMENT=$1; shift
+    FREQUENCY_SAMPLING=$1; shift
+
+    GPUS=($@)
+    N=${#GPUS[*]}
+    echo Will evaluate on "$N" GPUS!
+
+    RUN_ARGS="--DILATE=$DILATE --SAVE_IMAGES=$SAVE_IMAGES --DATASET_PATH=$MVTEC_PATH --NUM_SEGMENTED=$NUM_SEGMENTED --RUN_NAME=$RUN_NAME --RESULTS_PATH=$RESULTS_PATH --DATASET=MVTEC --EPOCHS=$EPOCHS --LEARNING_RATE=$LEARNING_RATE --DELTA_CLS_LOSS=$DELTA_CLS_LOSS --BATCH_SIZE=$BATCH_SIZE --WEIGHTED_SEG_LOSS=$WEIGHTED_SEG_LOSS --WEIGHTED_SEG_LOSS_P=$WEIGHTED_SEG_LOSS_P --WEIGHTED_SEG_LOSS_MAX=$WEIGHTED_SEG_LOSS_MAX --DYN_BALANCED_LOSS=$DYN_BALANCED_LOSS --GRADIENT_ADJUSTMENT=$GRADIENT_ADJUSTMENT --FREQUENCY_SAMPLING=$FREQUENCY_SAMPLING" # --VALIDATE=True --VALIDATE_ON_TEST=True"
+
+    #  declare -a arr=("bottle",
+    #                 "cable",
+    #                 "capsule",
+    #                 "carpet",
+    #                 "grid",
+    #                 "hazelnut",
+    #                 "leather",
+    #                 "metal_nut",
+    #                 "pill",
+    #                 "screw",
+    #                 "tile",
+    #                 "toothbrush",
+    #                 "transistor",
+    #                 "wood",
+    #                 "zipper",)
+
+    declare -a arr=("Class1",
+                      "Class2",
+                      "Class3",
+                      "Class4",
+                      "Class5",
+                      "Class6",
+                      "Class7",
+                      "Class8",
+                      "Class9",
+                      "Class10",
+                      "Class11",
+                      "Class12",
+                      "Class13",
+                      "Class14",
+                      "Class15",)
+
+    ## now loop through the above array
+    # for class in "${arr[@]}"
+    # do
+    #       LOG_REDIRECT=$RESULTS_PATH/MVTEC/$RUN_NAME/FOLD_$class/training_log.txt
+
+    #       mkdir -p $RESULTS_PATH/MVTEC/$RUN_NAME/FOLD_$class && python -u train_net.py --GPU=${GPUS[$N-1]} --FOLD=$class $RUN_ARGS | /usr/bin/tee $LOG_REDIRECT &
+
+    # done
+    # sleep 60
+
+    class=1
+
+    for (( ;; ));
+    do
+      for j in $(seq 0 $(( $N - 1 )));
+      do
+          LOG_REDIRECT=$RESULTS_PATH/MVTEC/$RUN_NAME/FOLD_$class/training_log.txt
+
+          mkdir -p $RESULTS_PATH/MVTEC/$RUN_NAME/FOLD_$class && python -u train_net.py --GPU=${GPUS[$N-1]} --FOLD=$class $RUN_ARGS | /usr/bin/tee $LOG_REDIRECT &
+
+          class=$(( $class + 1 ))
+          [[ $class -eq 16 ]] && break
+      done
+      sleep 1
+      wait
+      [[ $class -eq 16 ]] && break
+    done
+    sleep 1
 }
 
 
