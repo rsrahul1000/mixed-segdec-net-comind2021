@@ -56,7 +56,6 @@ class End2End:
 
         train_loader = get_dataset("TRAIN", self.cfg)
         # print(train_loader)
-        # pass
 
         validation_loader = get_dataset("VAL", self.cfg)
 
@@ -82,6 +81,13 @@ class End2End:
             self, data, device, model, criterion_seg, criterion_dec, optimizer, weight_loss_seg, weight_loss_dec,
             tensorboard_writer, iter_index):
         images, seg_masks, seg_loss_masks, is_segmented, _ = data
+
+        print("images: ", images.size())
+        print("seg_masks: ", seg_masks.size())
+        print("seg_loss_masks: ", seg_loss_masks.size())
+        print("is_segmented: ", is_segmented)
+
+        print("===========================================")
 
         batch_size = self.cfg.BATCH_SIZE
         memory_fit = self.cfg.MEMORY_FIT  # Not supported yet for >1
@@ -115,12 +121,14 @@ class End2End:
 
             if is_segmented[sub_iter]:
                 if self.cfg.WEIGHTED_SEG_LOSS:
-                    loss_seg = torch.mean(criterion_seg(
-                        output_seg_mask, seg_masks_) * seg_loss_masks_)
+                    print("output_seg_mask: ", output_seg_mask.size())
+                    print("seg_masks_: ", seg_masks_.size())
+                    print("criterion_seg: ", criterion_seg(output_seg_mask, seg_masks_).size())
+                    print("seg_loss_masks_: ", seg_loss_masks_.size())
+                    loss_seg = torch.mean(criterion_seg(output_seg_mask, seg_masks_) * seg_loss_masks_)
                 else:
                     loss_seg = criterion_seg(output_seg_mask, seg_masks_)
                 loss_dec = criterion_dec(decision, is_pos_)
-
                 total_loss_seg += loss_seg.item()
                 total_loss_dec += loss_dec.item()
 
@@ -218,8 +226,7 @@ class End2End:
 
                 model.train()
                 if tensorboard_writer is not None:
-                    tensorboard_writer.add_scalar(
-                        "Accuracy/Validation/", validation_accuracy, epoch)
+                    tensorboard_writer.add_scalar("Accuracy/Validation/", validation_accuracy, epoch)
 
         return losses, validation_data
 

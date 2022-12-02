@@ -94,9 +94,9 @@ class Config:
             if self.NUM_SEGMENTED is None:
                 raise Exception("Missing NUM_SEGMENTED for KSDD2 dataset!")
         elif self.DATASET == 'MVTEC':
-            self.INPUT_WIDTH = 224
-            self.INPUT_HEIGHT = 224
-            self.INPUT_CHANNELS = 3
+            self.INPUT_WIDTH = 1024
+            self.INPUT_HEIGHT = 1024
+            self.INPUT_CHANNELS = 1
             self.VALIDATE_ON_TEST = False
             # self.VALIDATE = False
             self.USE_BEST_MODEL = True
